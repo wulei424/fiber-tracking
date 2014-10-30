@@ -29,7 +29,7 @@ data_points=2;     %the number of datapoints needed to create a meaningful avera
 
 dt=trajectory(2,1)-trajectory(1,1);  %the time interval
 
-t=trajectory(end,1);  %the total time of the experiment
+t=trajectory(end,1)-trajectory(1,1);  %the total time of the experiment
 
 %=================================
 %calculations
