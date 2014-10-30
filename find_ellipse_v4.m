@@ -74,79 +74,27 @@ if mv
   close(aviobj);
 end
 
+%%
 %%%%%particle tracking
-param.mem = 5;
+param.mem = 0;
 param.good = 10;
 param.dim = 2;
 param.quiet = 1;
 maxdisp = 20;
 trks = track(cnt,maxdisp,param);
+
+%%
 %%%%%%%particle tracking
-trks_part = trks;
-trks_part(:,3:8) = [];
-trks_theta = [trks(:,4) zeros(size(trks,1),1) trks(:,9:10)];
-out = MSD(trks_part);
-out_theta = MSD(trks_theta);
-
-
+% trks_part = trks;
+% trks_part(:,3:8) = [];
+% trks_theta = [trks(:,4) zeros(size(trks,1),1) trks(:,9:10)];
+% out = MSD(trks_part);
+% out_theta = MSD(trks_theta);
+%%
 figure;
 for k=1:max(trks(:,10)); ind=find(trks(:,10)==k); plot(trks(ind,1)*0.11,trks(ind,2)*0.11);xlabel('X [\mu m]');ylabel('Y [\mu m]');
     hold all;
 end
-
-fps=1/(0.11);
-ppm=1/(0.18);
-figure;
-loglog(out(:,1)/fps,out(:,2)/(ppm.^2));xlabel('Time [sec]');ylabel('Translational MSD [\mu m^2]');
-%figure;
-%loglog(out_theta(:,1)/fps,out(:,2)/(ppm.^2));xlabel('Time [sec]');ylabel('Translational MSD [\mu m^2]');
-
-%figure;
-%plot(trks(:,9:10)/fps,trks(:,4));xlabel('Time [sec]');ylabel('Rotational [Angle deg]');
-figure;
-hist(cnd(:,7));
-figure;
-hist(trks(:,10));
-
-%start by computing the aspect ratio for all particles
-% modify this line so that a is a vector of aspect ratios for all the particles and that a(1) is the aspect ratio of particle 1 and a(i) is the aspect ratio of particle i.
-%a=cnd(:,7)/cnd(:,8);
-a=[];
-
-for id=1:max(trks(:,10))
-ind_1=find(trks(:,10)==id);
-majorax=trks(ind_1,7);% check column
-minorax=trks(ind_1,8);%check column
-a(id)=mean(majorax)/mean(minorax);
-end
-
-
-%use the sort function to sort the values of a
-[sorted_a, inds]=sort(a,'ascend');
-
-%then make a plot of the xy_msd and theta_msd vs aspect ratio by coloring the plots by their aspect ratio.
-
-%let's make a plot where the color changes linearly with aspect ratio.  
-
-da=0.5; % might have to play with da
-abins=min(a):da:(max(a)+da);
-nbins=length(abins);
-
-% generate colors
-bincolors=jet(nbins);
-figure;
-for i=1:max(trks(:,10))
-%compute bin for particle
-ind_2=find(abins(1:end-1)>a(i) & abins(2:end)<=a(i),1,'First');
-% modify this line so that lagtimes and msd are the lagtimes and msd for particle i 
-plot(out(:,1), out(:,2), '-', 'color', bincolors(ind_2,:));hold all
-end
-
-id = trks(:,10) == 1;
-
-% msd_xy = md_calculator([trks(id,9) sqrt(trks(id,1).^2+trks(id,2).^2)]);
-% msd_theta = md_calculator([trks(id,9) trks(id,4)]);
-
 
 %%
 mv=0;
@@ -183,4 +131,130 @@ if mv
   close(aviobj);
 end
 save cnt cnt
+
+
+%%
+%id = trks(:,10) == 1;
+
+% msd_xy = md_calculator([trks(id,9) sqrt(trks(id,1).^2+trks(id,2).^2)]);
+% msd_theta = md_calculator([trks(id,9) trks(id,4)]);
+
+
+%%
+number_particles=max(trks(:,10));
+
+for id=1:number_particles
+    ind=find(trks(:,10)==id);
+    msd_xy{id} = msd_calculator([trks(ind,9) sqrt(trks(ind,1).^2+trks(ind,2).^2)]);
+    msd_theta{id} = msd_calculator([trks(ind,9) trks(ind,4)]);
+end
+
+%%
+
+figure;for k=1:length(msd_xy); loglog(msd_xy{k}(:,1),msd_xy{k}(:,2)); hold all; end
+
+%%
+fps=1/(0.11);
+ppm=1/(0.18);
+figure;
+loglog(out(:,1)/fps,out(:,2)/(ppm.^2));xlabel('Time [sec]');ylabel('Translational MSD [\mu m^2]');
+%figure;
+%loglog(out_theta(:,1)/fps,out(:,2)/(ppm.^2));xlabel('Time [sec]');ylabel('Translational MSD [\mu m^2]');
+%%
+%figure;
+%plot(trks(:,9:10)/fps,trks(:,4));xlabel('Time [sec]');ylabel('Rotational [Angle deg]');
+figure;
+hist(cnd(:,7));
+figure;
+hist(trks(:,10));
+%%
+%start by computing the aspect ratio for all particles
+% modify this line so that a is a vector of aspect ratios for all the particles and that a(1) is the aspect ratio of particle 1 and a(i) is the aspect ratio of particle i.
+%a=cnd(:,7)/cnd(:,8);
+a=[];
+
+for id=1:max(trks(:,10))
+ind_1=find(trks(:,10)==id);
+majorax=trks(ind_1,7);% check column
+minorax=trks(ind_1,8);%check column
+a(id)=mean(majorax)/mean(minorax);
+end
+
+
+%use the sort function to sort the values of a
+[sorted_a, inds]=sort(a,'ascend');
+
+%then make a plot of the xy_msd and theta_msd vs aspect ratio by coloring the plots by their aspect ratio.
+
+%let's make a plot where the color changes linearly with aspect ratio.  
+
+da=0.5; % might have to play with da
+abins=(min(a)-da):da:(max(a)+da);
+nbins=length(abins);
+
+% generate colors
+bincolors=jet(nbins);
+figure(1);
+figure(2);
+for i=1:max(trks(:,10))
+%compute bin for particle
+ind_2=find(abins(1:end-1)<a(i) & abins(2:end)>=a(i),1,'First');
+% modify this line so that lagtimes and msd are the lagtimes and msd for particle i 
+out=[];
+out(:,1)=msd_xy{i}(:,1);
+out(:,2)=msd_xy{i}(:,2);
+
+figure(1);
+loglog(out(:,1), out(:,2), '-', 'color', bincolors(ind_2,:));hold all
+
+figure(2);
+plot(i,a(i),'s', 'color', bincolors(ind_2,:));hold all
+end
+
+%%
+
+abins2=1:2:11;
+trks_xy = [trks(:,1) trks(:,2) trks(:,9:10)];    
+trks_theta = [trks(:,4) zeros(size(trks,1),1) trks(:,9:10)];
+for bin=1:length(abins2)-1
+    particle_inds=find(a>abins2(bin) & a<=abins2(bin+1),1,'First');
+    ind=[];
+    for j=1:length(particle_inds)
+    ind=[ind,find(trks_xy(:,4)==particle_inds(j))];
+    end
+    sub_trks_xy = trks_xy(ind,:);
+    sub_trks_theta = trks_theta(ind,:);
+    grp_msd_xy{bin} = MSD(sub_trks_xy); % time, msd, number of observations
+    grp_msd_theta{bin} = MSD(sub_trks_theta);
+end    
+
+%%
+nbins=length(abins2)-1;
+
+% generate colors
+bincolors=jet(nbins);
+figure(1);
+figure(2);
+for i=1:nbins
+
+out=[];
+out(:,1)=grp_msd_theta{i}(:,1); % change to xy
+out(:,2)=grp_msd_theta{i}(:,2);
+
+figure(1);
+loglog(out(:,1), out(:,2), 's', 'color', bincolors(i,:));hold all
+
+figure(2);
+plot(i,abins2(i),'s', 'color', bincolors(i,:));hold all
+end
+
+    
+
+%%%%%%%particle tracking
+% trks_part = trks;
+% trks_part(:,3:8) = [];
+% trks_theta = [trks(:,4) zeros(size(trks,1),1) trks(:,9:10)];
+% out = MSD(trks_part);
+% out_theta = MSD(trks_theta);
+
 
