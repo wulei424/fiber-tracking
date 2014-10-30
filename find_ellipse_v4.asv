@@ -11,7 +11,7 @@ cnt = [];
 mv=0;
 % mv = input('make movie?:');
 if mv
-    aviobj = VideoWriter(fullfile(outpath,[expid,'.avi']),'Uncompressed AVI');
+    aviobj = VideoWriter(fullfile(outpath,'.avi'),'Uncompressed AVI');
     aviobj.FrameRate = 20; %aviobj.Quality = 100;
     open(aviobj);
 end
