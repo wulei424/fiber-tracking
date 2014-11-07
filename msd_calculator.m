@@ -17,7 +17,7 @@
 
 
 
-function out=msd_calculator(trajectory);
+function out=msd_calculator(trajectory)
 
 %=================================
 %constants that can be played with
@@ -36,6 +36,7 @@ t=trajectory(end,1)-trajectory(1,1);  %the total time of the experiment
 
 %calculate the mean squared displacement
 c=1;   %the variable that keeps increasing tau (which is c*dt)
+[~,nc] = size(trajectory);
 tau=dt;
 while data_points*tau < t
     msd=0;    %mean squared displacement
@@ -43,7 +44,14 @@ while data_points*tau < t
     n=floor(t/tau)-1;  %the number of squared displacements averaged together to get the msd
     
     for index=1:n
-        squared_displacement=[ squared_displacement ; (trajectory(c*(index+1),2)-trajectory(c*index,2))^2 ];
+        if nc == 3
+        squared_displacement=[ squared_displacement ; ...
+            (trajectory(c*(index+1),2)-trajectory(c*index,2))^2 ...
+            + (trajectory(c*(index+1),3)-trajectory(c*index,3))^2];
+        else
+            squared_displacement=[ squared_displacement ; ...
+            (trajectory(c*(index+1),2)-trajectory(c*index,2))^2];
+        end
     end
     
     squared_displacement=squared_displacement(isfinite(squared_displacement));
