@@ -19,10 +19,9 @@ end
 hf1 = figure(1);
 set(hf1,'Position',[0 50 1000 600],'color','w');
 for t=1:length(imlst)
- 
     t;
     im = (imread(imlst(t).name));  % read the image
-    subplot(1,2,1)
+    subplot(1,2,1);
     imagesc(im);colormap gray; axis image;
     hold on
     im = bpass(im,1,11);  %bpass
@@ -30,9 +29,9 @@ for t=1:length(imlst)
 
     imbw = im>th; %creating a binary image (black and white) 
 
-    subplot(1,2,2)
-    imagesc(im); axis image
-    title(int2str(t))
+    subplot(1,2,2);
+    imagesc(im); axis image;
+    title(int2str(t));
 
 
     
@@ -83,25 +82,31 @@ param.quiet = 1;
 maxdisp = 20;
 trks = track(cnt,maxdisp,param);
 
-%%
+%% caculate MSD using MSD function
 %%%%%%%particle tracking
 % trks_part = trks;
 % trks_part(:,3:8) = [];
 % trks_theta = [trks(:,4) zeros(size(trks,1),1) trks(:,9:10)];
 % out = MSD(trks_part);
 % out_theta = MSD(trks_theta);
-%%
+%% plot trajectories
+fps=1/(0.11); % frame per sec
+ppm=1/(0.18); % pixel per micrometer
+dpr=1/(0.0175);% degree per radian
+
 figure;
-for k=1:max(trks(:,10)); ind=find(trks(:,10)==k); plot(trks(ind,1)*0.11,trks(ind,2)*0.11);xlabel('X [\mu m]');ylabel('Y [\mu m]');
+for k=1:max(trks(:,10)); 
+    ind=find(trks(:,10)==k);
+    plot(trks(ind,1)/(ppm.^2),trks(ind,2)/(ppm.^2));xlabel('X [\mu m]');ylabel('Y [\mu m]');
     hold all;
 end
 
-%%
+%% make a mv with identified particles
 mv=0;
 % mv = input('make movie?:');
 if mv
     aviobj = VideoWriter('Series016_tracked.avi','Uncompressed AVI');
-    aviobj.FrameRate = 20; %aviobj.Quality = 100;
+    aviobj.FrameRate = 20; %aviobj.Quality = 100;??
     open(aviobj);
 end
 figure(2)
@@ -133,54 +138,130 @@ end
 save cnt cnt
 
 
-%%
-%id = trks(:,10) == 1;
-
-% msd_xy = md_calculator([trks(id,9) sqrt(trks(id,1).^2+trks(id,2).^2)]);
-% msd_theta = md_calculator([trks(id,9) trks(id,4)]);
 
 
-%%
+%% calculate translational and rotational MSD using (msd_calculator) function
 number_particles=max(trks(:,10));
 
 for id=1:number_particles
     ind=find(trks(:,10)==id);
     msd_xy{id} = msd_calculator([trks(ind,9) sqrt(trks(ind,1).^2+trks(ind,2).^2)]);
     msd_theta{id} = msd_calculator([trks(ind,9) trks(ind,4)]);
+   
 end
 
-%%
+%% plot translational and rotational MSD VS time
 
-figure;for k=1:length(msd_xy); loglog(msd_xy{k}(:,1),msd_xy{k}(:,2)); hold all; end
+figure;
+for id=1:length(msd_xy);
+    loglog(msd_xy{id}(:,1)/fps,msd_xy{id}(:,2)/(ppm.^2)); xlabel('Time [sec]');ylabel('Translational MSD [\mu m^2]');hold all;
+   
+end
 
-%%
-fps=1/(0.11);
-ppm=1/(0.18);
 figure;
-loglog(out(:,1)/fps,out(:,2)/(ppm.^2));xlabel('Time [sec]');ylabel('Translational MSD [\mu m^2]');
-%figure;
-%loglog(out_theta(:,1)/fps,out(:,2)/(ppm.^2));xlabel('Time [sec]');ylabel('Translational MSD [\mu m^2]');
-%%
-%figure;
-%plot(trks(:,9:10)/fps,trks(:,4));xlabel('Time [sec]');ylabel('Rotational [Angle deg]');
+for id=1:length(msd_theta);
+    loglog(msd_theta{id}(:,1)/fps,msd_theta{id}(:,2)/(dpr.^2)); xlabel('Time [sec]');ylabel('Rotational MSD [rad^2]');hold all;
+end
+%% plot MSD vs Time using MSD function
+% figure;
+% loglog(out(:,1)/fps,out(:,2)/(ppm.^2));xlabel('Time [sec]');ylabel('Translational MSD [\mu m^2]');
+% figure;
+% loglog(out_theta(:,1)/fps,out(:,2)/(57.^2));xlabel('Time [sec]');ylabel('Rotational MSD [rad^2]');
+%% plot major axis length distribution
+
 figure;
-hist(cnd(:,7));
+x1=trks(:,7)/ppm; % major axis length
+numberOfBins = 50;
+[counts, binValues] = hist(x1, numberOfBins);
+normalizedCounts = 100 * counts / sum(counts);
+bar(binValues, normalizedCounts, 'barwidth', 1);
+xlabel('Major Axis Length [\mu m]');
+ylabel('Normalized Count [%]');
+%% plot minor axis length distribution
 figure;
-hist(trks(:,10));
-%%
-%start by computing the aspect ratio for all particles
-% modify this line so that a is a vector of aspect ratios for all the particles and that a(1) is the aspect ratio of particle 1 and a(i) is the aspect ratio of particle i.
-%a=cnd(:,7)/cnd(:,8);
+x2=trks(:,8)/ppm; % minor axis length
+numberOfBins = 50;
+[counts, binValues] = hist(x2, numberOfBins);
+normalizedCounts = 100 * counts / sum(counts);
+bar(binValues, normalizedCounts, 'barwidth', 1);
+xlabel('Minor Axis Length [\mu m]');
+ylabel('Normalized Count [%]');
+%% caculate aspect ratio
+
+%%start by computing the aspect ratio for all particles
+
 a=[];
+A_major=[];
+slope=[];
 
 for id=1:max(trks(:,10))
-ind_1=find(trks(:,10)==id);
-majorax=trks(ind_1,7);% check column
-minorax=trks(ind_1,8);%check column
+ind=find(trks(:,10)==id);
+majorax=trks(ind,7);
+minorax=trks(ind,8);
 a(id)=mean(majorax)/mean(minorax);
+A_major(id)=mean(majorax);
+
+slope=mean(diff(A_major/ppm)./diff(a)); % relation between aspect ration and major aixs length
+plot(a(id),A_major(id)/ppm,'<');xlabel('Aspect ratio');ylabel('Major axis length [\mu m]');hold all;
+end
+
+ 
+%% calculate and plot Translational D (including theoretical D) VS Aspect ratio
+Kb=1.38*10^(-23);  % Boltzmann constant
+T=298; % sample temperature
+eta=0.89*10^(-3); % viscosity for water at 23 ?C
+r1=-0.114;% parallel end-correction coefficient. --ref.Broersma J.Chem.Phys.(1960)
+r2=0.886;% perpendicular end-correction coefficient. --ref.Broersma J.Chem.Phys.(1960)
+r3=-0.447;% rotational end-correction coefficient.--ref.Broersma J.Chem.Phys.(1960)
+D_xy_theo_a=[];% theoretical D_xy as a function of aspect ratio
+D_xy_theo_l=[];% theoretical D_xy as a function of major axis length
+D_xy=[];
+figure(1);
+figure(2);
+A_a=min(a):0.1:max(a);
+A_l=min(x1):0.1:max(x1);
+
+
+D_xy_theo_a=((Kb*T)./(6*pi*eta)).*((2*log(A_a)-r1-r2)./(slope*A_a*10.^(-6)));
+D_xy_theo_l=((Kb*T)./(6*pi*eta)).*((2*log(A_l/slope)-r1-r2)./(A_l*10.^(-6)));
+for id=1:length(msd_xy);
+    D_xy{id}=mean((msd_xy{id}(:,2)/(ppm.^2))./(4*(msd_xy{id}(:,1)/fps)));
+    figure(1);
+    semilogy(a(id),D_xy{id},'o',abs(A_a),D_xy_theo_a*10.^(12),'LineWidth',2); axis([1,11, 10^(-3), 10]); xlabel('Aspect ratio');ylabel('Translational diffusion coefficient [\mu m^2/s]');hold all;
+   
+    figure(2);
+    semilogy(A_major(id)/ppm,D_xy{id},'s',abs(A_l),D_xy_theo_l*10.^(12),'LineWidth',2); axis([1,25, 10^(-3), 10]);xlabel('Major axis length [\mu m]');ylabel('Translational diffusion coefficient [\mu m^2/s]');hold all;
 end
 
 
+
+  %% calculate rotational D (including theoretical) and plot rotational D vs aspect ratio
+D_theta=[];
+D_theta_theo_a=[];% theoretical D_theta as a function of aspect ratio
+D_theta_theo_l=[];% theoretical D_theta as a function of major axis length
+tau=[]; % tau is the time for the fiber to diffuse 1 rad
+figure(1);
+figure(2);
+D_theta_theo_a=((3*Kb*T)./(pi*eta)).*(((log(A_a)-r3))./(((slope*A_a)*10.^(-6)).^3));
+D_theta_theo_l=((3*Kb*T)./(pi*eta)).*(((log(A_l/slope)-r3))./(((A_l)*10.^(-6)).^3));
+
+for id=1:length(msd_theta);
+D_theta{id}=mean((msd_theta{id}(:,2)/(dpr.^2))./(2*(msd_theta{id}(:,1)/fps)));
+tau(id)=1./(2*D_theta{id}); 
+
+figure(1);
+semilogy(a(id),D_theta{id},'d', abs(A_a),D_theta_theo_a,'LineWidth',2);axis([1,11, 10^(-4), 10^(2)]);xlabel('Aspect ratio');ylabel('Rotational diffusion coefficient [rad^2/s]');hold all;
+figure(2);
+semilogy(A_major(id)/ppm,D_theta{id},'<',abs(A_l),D_theta_theo_l,'LineWidth',2); axis([1,25, 10^(-4), 10^(2)]); xlabel('Major axis length [\mu m]');ylabel('Rotational diffusion coefficient [rad^2/s]');hold all;end
+%% plot Dr/Dt as a function of aspect ratio
+figure;
+Y=[];
+for id=1:number_particles
+    Y(id)=D_xy{id}./D_theta{id};
+loglog(a(id),Y(id),'o','LineWidth',2);axis([1,11, 10^(-4), 10^(2)]);xlabel('Aspect ratio');ylabel('Dr/Dt [rad^2/\mum^2]');hold all;
+end
+
+%%
 %use the sort function to sort the values of a
 [sorted_a, inds]=sort(a,'ascend');
 
@@ -198,19 +279,29 @@ figure(1);
 figure(2);
 for i=1:max(trks(:,10))
 %compute bin for particle
-ind_2=find(abins(1:end-1)<a(i) & abins(2:end)>=a(i),1,'First');
-% modify this line so that lagtimes and msd are the lagtimes and msd for particle i 
+ind_1=find(abins(1:end-1)<a(i) & abins(2:end)>=a(i),1,'First');
+
 out=[];
 out(:,1)=msd_xy{i}(:,1);
 out(:,2)=msd_xy{i}(:,2);
 
 figure(1);
-loglog(out(:,1), out(:,2), '-', 'color', bincolors(ind_2,:));hold all
+loglog(out(:,1)/fps, out(:,2)/(ppm.^2), '-', 'color', bincolors(ind_1,:));xlabel('Time [sec]');ylabel('Translational MSD [\mu m^2]');hold all
 
 figure(2);
-plot(i,a(i),'s', 'color', bincolors(ind_2,:));hold all
+plot(i,a(i),'s', 'color', bincolors(ind_1,:));xlabel('particle ID');ylabel('aspect ratio');hold all
+
 end
 
+%%
+%%plot aspect ratio distribution
+figure;
+numberOfBins = nbins;
+[counts, binValues] = hist(a, numberOfBins);
+normalizedCounts = 100 * counts / sum(counts);
+bar(binValues, normalizedCounts, 'barwidth', 1);
+xlabel('aspect ratio');
+ylabel('Normalized Count [%]');
 %%
 
 abins2=1:2:11;
@@ -228,29 +319,43 @@ for bin=1:length(abins2)-1
     grp_msd_theta{bin} = MSD(sub_trks_theta);
 end    
 
-%%
+%% plot Translational and rotational MSD VS Time using bins
 nbins=length(abins2)-1;
 
 % generate colors
 bincolors=jet(nbins);
+
 figure(1);
 figure(2);
+
 for i=1:nbins
 
-out=[];
-out(:,1)=grp_msd_theta{i}(:,1); % change to xy
-out(:,2)=grp_msd_theta{i}(:,2);
+out_theta=[];
+
+out_theta(:,1)=grp_msd_theta{i}(:,1);% time
+out_theta(:,2)=grp_msd_theta{i}(:,2);% angular
+
+
+out_xy=[];
+
+out_xy(:,1)=grp_msd_xy{i}(:,1); 
+out_xy(:,2)=grp_msd_xy{i}(:,2);
+
 
 figure(1);
-loglog(out(:,1), out(:,2), 's', 'color', bincolors(i,:));hold all
+loglog(out_theta(:,1)/fps, out_theta(:,2)/(dpr.^2), 's', 'color', bincolors(i,:)); xlabel('Time [sec]');ylabel('Rotational MSD [rad^2]');hold all
 
 figure(2);
-plot(i,abins2(i),'s', 'color', bincolors(i,:));hold all
-end
+loglog(out_xy(:,1)/fps, out_xy(:,2)/(ppm.^2), 's', 'color', bincolors(i,:));xlabel('Time [sec]');ylabel('Translational MSD [\mu m^2]');hold all
+
+figure(3);
+plot(i,abins2(i),'s', 'color', bincolors(i,:));hold all; end
+
+
 
     
-
-%%%%%%%particle tracking
+%%
+%%%%%%%caculate MSD using MSD function
 % trks_part = trks;
 % trks_part(:,3:8) = [];
 % trks_theta = [trks(:,4) zeros(size(trks,1),1) trks(:,9:10)];
