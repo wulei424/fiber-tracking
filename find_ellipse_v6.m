@@ -330,7 +330,7 @@ out(:,1)=msd_xy{i}(:,1);
 out(:,2)=msd_xy{i}(:,2);
 
 figure(1);
-loglog(out(:,1)/fps, out(:,2)/(ppm.^2), 's', 'color', bincolors(ind_1,:));xlabel('Time [sec]');ylabel('Translational MSD [\mum^2]');hold all
+loglog(out(:,1)/fps, out(:,2)/(ppm.^2), '-', 'color', bincolors(ind_1,:));xlabel('Time [sec]');ylabel('Translational MSD [\mum^2]');hold all
 
 figure(2);
 plot(i,a(i),'s', 'color', bincolors(ind_1,:));xlabel('particle ID');ylabel('aspect ratio');hold all
@@ -361,8 +361,6 @@ for bin=1:length(abins2)-1
     sub_trks_theta = trks_theta(ind,:);
     grp_msd_xy{bin} = MSD(sub_trks_xy); % time, msd, number of observations
     grp_msd_theta{bin} = MSD(sub_trks_theta);
-    grp_msd_xy_1{bin}=msd_distribution_calculator(sub_trks_xy,17);% MSD distribution at time tau
-    grp_msd_theta_1{bin}=msd_distribution_calculator(sub_trks_theta,17);
 end    
 
 
@@ -374,339 +372,45 @@ nbins=length(abins2)-1;
 % generate colors
 bincolors=jet(nbins);
 
-%figure(1);
-%figure(2);
+figure(1);
+figure(2);
 
 
 msd_xy_theo=[];% theoretical msd_xy as a function of time
 msd_theta_theo=[];%theoretical msd_theta as a function of time
 
+figure(1);
+figure(2);
+
 
 
 for i=1:nbins
 
 out_theta=[];
-v_theta=[];
+
 out_theta(:,1)=grp_msd_theta{i}(:,1);% time
 out_theta(:,2)=grp_msd_theta{i}(:,2);% angular
-v_theta=out_theta(:,2)./out_theta(:,1);
-out_theta_1(:,4)=grp_msd_theta_1{i}(:,4);
+
+
 
 out_xy=[];
 T_1=[];
-v_xy=[];
+
 out_xy(:,1)=grp_msd_xy{i}(:,1); 
 out_xy(:,2)=grp_msd_xy{i}(:,2);
-v_xy=out_xy(:,2)./out_xy(:,1);
-out_xy_1(:,4)=grp_msd_xy_1{i}(:,4);
-
 T_1=min(out_xy(:,1)/fps):0.01:max(out_xy(:,1)/fps);
 msd_xy_theo=((Kb*T)./(6*pi*eta)).*((2*log(2*i)-r1-r2)./(slope*(2*i)*10.^(-6)))*4*T_1*(10^(12));
 msd_theta_theo=((3*Kb*T)./(pi*eta)).*(((log(2*i)-r3))./(((slope*2*i)*10.^(-6)).^3))*2*T_1;
-%figure(1);
-%loglog(out_theta(:,1)/fps, out_theta(:,2)/(dpr.^2), 's', T_1,msd_theta_theo,'color', bincolors(i,:),'LineWidth',2);axis([10^(-1) 30 10^(-6) 10^(2)]); xlabel('Time [sec]');ylabel('Rotational MSD [rad^2]');hold all
-
-%figure(2);
-%loglog(out_xy(:,1)/fps, out_xy(:,2)/(ppm.^2), 's', T_1,msd_xy_theo,'color', bincolors(i,:),'LineWidth',2);axis([10^(-1) 30 10^(-3) 10^(2)]);xlabel('Time [sec]');ylabel('Translational MSD [\mum^2]');hold all
-
-%figure(3);
-%plot(i,abins2(i),'s', 'color', bincolors(i,:));hold all;
 figure(1);
-pd_v=fitdist(v_xy,'Exponential');
-x_MSD_v=min(v_xy):0.1:max(v_xy);
-y_MSD_v=pdf(pd_v,x_MSD_v);
-semilogy(x_MSD_v,y_MSD_v, 'color',bincolors(i,:),'LineWidth',2);hold all
-
-%pd=fitdist(out_xy(:,2)/(ppm.^2),'Normal');
-%x_MSD_T = min(out_xy(:,2)/(ppm.^2)):0.01:max(out_xy(:,2)/(ppm.^2));
-%y_MSD_T= pdf(pd,x_MSD_T);
-%figure(4);
-%plot(x_MSD_T,y_MSD_T, 'color',bincolors(i,:),'LineWidth',2);hold all
-end
-
-%% plot Translational and rotational MSD (including theoretical MSD)VS Time using bins
-%t<<1sec
-nbins=length(abins2)-1;
-
-% generate colors
-bincolors=jet(nbins);
-
-%figure(1);
-%figure(2);
-
-
-%msd_xy_theo=[];% theoretical msd_xy as a function of time
-%msd_theta_theo=[];%theoretical msd_theta as a function of time
-
-
-
-for i=1:nbins
-
-out_theta=[];
-
-out_theta(:,1)=grp_msd_theta{i}(:,1);% time
-out_theta(:,2)=grp_msd_theta{i}(:,2);% angular
-figure(1);
-if out_theta(:,1)/fps<1
-   loglog(out_theta(:,1)/fps, out_theta(:,2)/(dpr.^2));hold all
-end
-%figure(2);
-%out_xy=[];
-
-%out_xy(:,1)=grp_msd_xy{i}(:,1); 
-%out_xy(:,2)=grp_msd_xy{i}(:,2);
-%if out_xy(:,1)/fps<1
-    %loglog(out_xy(:,1)/fps, out_xy(:,2)/(ppm.^2));hols all
-%end
-
-%T_1=0.01:0.01:1;
-%msd_xy_theo=((Kb*T)./(6*pi*eta)).*((2*log(2*i)-r1-r2)./(slope*(2*i)*10.^(-6)))*4*T_1*(10^(12));
-%msd_theta_theo=((3*Kb*T)./(pi*eta)).*(((log(2*i)-r3))./(((slope*2*i)*10.^(-6)).^3))*2*T_1;
-%figure(1);
-%loglog(sub_out_theta(:,1)/fps, sub_out_theta(:,2)/(dpr.^2), 's', T_1,msd_theta_theo,'color', bincolors(i,:),'LineWidth',2);axis([10^(-1) 30 10^(-6) 10^(2)]); xlabel('Time [sec]');ylabel('Rotational MSD [rad^2]');hold all
-
-%figure(2);
-%loglog(sub_out_xy(:,1)/fps, sub_out_xy(:,2)/(ppm.^2), 's', T_1,msd_xy_theo,'color', bincolors(i,:),'LineWidth',2);axis([10^(-1) 30 10^(-3) 10^(2)]);xlabel('Time [sec]');ylabel('Translational MSD [\mum^2]');hold all
-
-%figure(3);
-%plot(i,abins2(i),'s', 'color', bincolors(i,:));hold all;
-
-
-%pd=fitdist(out_xy(:,2)/(ppm.^2),'Normal');
-%x_MSD_T = min(out_xy(:,2)/(ppm.^2)):0.01:max(out_xy(:,2)/(ppm.^2));
-%y_MSD_T= pdf(pd,x_MSD_T);
-%figure(4);
-%plot(x_MSD_T,y_MSD_T, 'color',bincolors(i,:),'LineWidth',2);hold all
-end
-%%
-for i=1:nbins
-
-out_theta=[];
-
-out_theta(:,1)=grp_msd_theta{i}(:,1);% time
-out_theta(:,2)=grp_msd_theta{i}(:,2);% angular
-
-out_xy=[];
-out_xy(:,1)=grp_msd_xy{i}(:,1); 
-out_xy(:,2)=grp_msd_xy{i}(:,2);
-%x_MSD_T_mu=mean(out_xy(:,2));
-%x_MSD_T_sigma=std(out_xy(:,2));
-%x_h=(out_xy(:,2)-x_MSD_T_mu)/x_MSD_T_sigma;
-figure(1);
-subplot(2,3,1);
-if i==1
-x_MSD_T_mu=mean(out_xy(:,2)/(ppm.^2));
-x_MSD_T_sigma=std(out_xy(:,2)/(ppm.^2));
-x_h=(out_xy(:,2)/(ppm.^2)-x_MSD_T_mu)/x_MSD_T_sigma;
-
-h=kstest(x_h)
-[f,x_h_values] = ecdf(x_h);
-F=plot(x_h_values,f,'s','color',bincolors(i,:),'LineWidth',2);
-
-hold on;
-G = plot(x_h_values,normcdf(x_h_values,0,1),'color',bincolors(i,:),'LineWidth',2);xlabel('Translational MSD [\mum^2]');ylabel('CDF');
-legend([F G],'Exp. CDF','Standard Normal CDF','Location','SE');
-
-hold all;
-end
-
-subplot(2,3,2);
-if i==2
-x_MSD_T_mu=mean(out_xy(:,2)/(ppm.^2));
-x_MSD_T_sigma=std(out_xy(:,2)/(ppm.^2));
-x_h=(out_xy(:,2)/(ppm.^2)-x_MSD_T_mu)/x_MSD_T_sigma;
-
-h=kstest(x_h)
-[f,x_h_values] = ecdf(x_h);
-F=plot(x_h_values,f,'s','color',bincolors(i,:),'LineWidth',2);
-
-hold on;
-G = plot(x_h_values,normcdf(x_h_values,0,1),'color',bincolors(i,:),'LineWidth',2);xlabel('Translational MSD [\mum^2]');ylabel('CDF');
-legend([F G],'Exp. CDF','Standard Normal CDF','Location','SE');
-
-hold all;
-end
-
-subplot(2,3,3);
-if i==3
-x_MSD_T_mu=mean(out_xy(:,2)/(ppm.^2));
-x_MSD_T_sigma=std(out_xy(:,2)/(ppm.^2));
-x_h=(out_xy(:,2)/(ppm.^2)-x_MSD_T_mu)/x_MSD_T_sigma;
-
-h=kstest(x_h)
-[f,x_h_values] = ecdf(x_h);
-F=plot(x_h_values,f,'s','color',bincolors(i,:),'LineWidth',2);
-
-hold on;
-G = plot(x_h_values,normcdf(x_h_values,0,1),'color',bincolors(i,:),'LineWidth',2);xlabel('Translational MSD [\mum^2]');ylabel('CDF');
-legend([F G],'Exp. CDF','Standard Normal CDF','Location','SE');
-
-hold all;
-end
-
-subplot(2,3,4);
-if i==4
-x_MSD_T_mu=mean(out_xy(:,2)/(ppm.^2));
-x_MSD_T_sigma=std(out_xy(:,2)/(ppm.^2));
-x_h=(out_xy(:,2)/(ppm.^2)-x_MSD_T_mu)/x_MSD_T_sigma;
-
-h=kstest(x_h)
-[f,x_h_values] = ecdf(x_h);
-F=plot(x_h_values,f,'s','color',bincolors(i,:),'LineWidth',2);
-
-hold on;
-G = plot(x_h_values,normcdf(x_h_values,0,1),'color',bincolors(i,:),'LineWidth',2);xlabel('Translational MSD [\mum^2]');ylabel('CDF');
-legend([F G],'Exp. CDF','Standard Normal CDF','Location','SE');
-
-hold all;
-end
-
-
-subplot(2,3,5);
-if i==5
-x_MSD_T_mu=mean(out_xy(:,2)/(ppm.^2));
-x_MSD_T_sigma=std(out_xy(:,2)/(ppm.^2));
-x_h=(out_xy(:,2)/(ppm.^2)-x_MSD_T_mu)/x_MSD_T_sigma;
-
-h=kstest(x_h)
-[f,x_h_values] = ecdf(x_h);
-F=plot(x_h_values,f,'s','color',bincolors(i,:),'LineWidth',2);
-
-hold on;
-G = plot(x_h_values,normcdf(x_h_values,0,1),'color',bincolors(i,:),'LineWidth',2);xlabel('Translational MSD [\mum^2]');ylabel('CDF');
-legend([F G],'Exp. CDF','Standard Normal CDF','Location','SE');
-
-hold all;
-end
+loglog(out_theta(:,1)/fps, out_theta(:,2)/(dpr.^2), 's', T_1,msd_theta_theo,'color', bincolors(i,:),'LineWidth',2);axis([10^(-1) 30 10^(-6) 10^(2)]); xlabel('Time [sec]');ylabel('Rotational MSD [rad^2]');hold all
 
 figure(2);
-subplot(2,3,1);
-if i==1
-x_MSD_R_mu=mean(out_theta(:,2)/(dpr.^2));
-x_MSD_R_sigma=std(out_theta(:,2)/(dpr.^2));
-x_hr=(out_theta(:,2)/(dpr.^2)-x_MSD_R_mu)/x_MSD_R_sigma;
-hr=kstest(x_hr)
-[f_r,x_hr_values] = ecdf(x_hr);
-F_r=plot(x_hr_values,f_r,'s','color',bincolors(i,:),'LineWidth',2);
+loglog(out_xy(:,1)/fps, out_xy(:,2)/(ppm.^2), 's', T_1,msd_xy_theo,'color', bincolors(i,:),'LineWidth',2);axis([10^(-1) 30 10^(-3) 10^(2)]);xlabel('Time [sec]');ylabel('Translational MSD [\mum^2]');hold all
 
-hold on;
-G_r = plot(x_hr_values,normcdf(x_hr_values,0,1),'color',bincolors(i,:),'LineWidth',2);xlabel('Rotational MSD [rad^2]');ylabel('CDF');
-legend([F_r G_r],'Exp. CDF','Standard Normal CDF','Location','SE');
-
-hold all;
-end
-subplot(2,3,2);
-if i==2
-x_MSD_R_mu=mean(out_theta(:,2)/(dpr.^2));
-x_MSD_R_sigma=std(out_theta(:,2)/(dpr.^2));
-x_hr=(out_theta(:,2)/(dpr.^2)-x_MSD_R_mu)/x_MSD_R_sigma;
-hr=kstest(x_hr)
-[f_r,x_hr_values] = ecdf(x_hr);
-F_r=plot(x_hr_values,f_r,'s','color',bincolors(i,:),'LineWidth',2);
-
-hold on;
-G_r = plot(x_hr_values,normcdf(x_hr_values,0,1),'color',bincolors(i,:),'LineWidth',2);xlabel('Rotational MSD [rad^2]');ylabel('CDF');
-legend([F_r G_r],'Exp. CDF','Standard Normal CDF','Location','SE');
-
-hold all;
-end
-
-subplot(2,3,3);
-if i==3
-x_MSD_R_mu=mean(out_theta(:,2)/(dpr.^2));
-x_MSD_R_sigma=std(out_theta(:,2)/(dpr.^2));
-x_hr=(out_theta(:,2)/(dpr.^2)-x_MSD_R_mu)/x_MSD_R_sigma;
-hr=kstest(x_hr)
-[f_r,x_hr_values] = ecdf(x_hr);
-F_r=plot(x_hr_values,f_r,'s','color',bincolors(i,:),'LineWidth',2);
-
-hold on;
-G_r = plot(x_hr_values,normcdf(x_hr_values,0,1),'color',bincolors(i,:),'LineWidth',2);xlabel('Rotational MSD [rad^2]');ylabel('CDF');
-legend([F_r G_r],'Exp. CDF','Standard Normal CDF','Location','SE');
-
-hold all;
-end
-
-
-subplot(2,3,4);
-if i==4
-x_MSD_R_mu=mean(out_theta(:,2)/(dpr.^2));
-x_MSD_R_sigma=std(out_theta(:,2)/(dpr.^2));
-x_hr=(out_theta(:,2)/(dpr.^2)-x_MSD_R_mu)/x_MSD_R_sigma;
-hr=kstest(x_hr)
-[f_r,x_hr_values] = ecdf(x_hr);
-F_r=plot(x_hr_values,f_r,'s','color',bincolors(i,:),'LineWidth',2);
-
-hold on;
-G_r = plot(x_hr_values,normcdf(x_hr_values,0,1),'color',bincolors(i,:),'LineWidth',2);xlabel('Rotational MSD [rad^2]');ylabel('CDF');
-legend([F_r G_r],'Exp. CDF','Standard Normal CDF','Location','SE');
-
-hold all;
-end
-
-subplot(2,3,5);
-if i==5
-x_MSD_R_mu=mean(out_theta(:,2)/(dpr.^2));
-x_MSD_R_sigma=std(out_theta(:,2)/(dpr.^2));
-x_hr=(out_theta(:,2)/(dpr.^2)-x_MSD_R_mu)/x_MSD_R_sigma;
-hr=kstest(x_hr)
-[f_r,x_hr_values] = ecdf(x_hr);
-F_r=plot(x_hr_values,f_r,'s','color',bincolors(i,:),'LineWidth',2);
-
-hold on;
-G_r = plot(x_hr_values,normcdf(x_hr_values,0,1),'color',bincolors(i,:),'LineWidth',2);xlabel('Rotational MSD [rad^2]');ylabel('CDF');
-legend([F_r G_r],'Exp. CDF','Standard Normal CDF','Location','SE');
-
-hold all;
-end
-
-end
-
+figure(3);
+plot(i,abins2(i),'s', 'color', bincolors(i,:));hold all; end
 %%
- for i=1:nbins
-
-out_theta=[];
-
-out_theta(:,1)=grp_msd_theta{i}(:,1);% time
-out_theta(:,2)=grp_msd_theta{i}(:,2);% angular
-
-
-
-out_xy=[];
-T_1=[];
-
-out_xy(:,1)=grp_msd_xy{i}(:,1); 
-out_xy(:,2)=grp_msd_xy{i}(:,2);
-x_MSD_T_mu=mean(out_xy(:,2)/(ppm.^2))
-x_MSD_T_sigma=std(out_xy(:,2)/(ppm.^2))
-
-data=normrnd(x_MSD_T_mu,x_MSD_T_sigma,1e4,1);
-
-if i==1
-[D PD] = allfitdist(data,'PDF');
-
-end
-
-if i==2
-[D PD] = allfitdist(data,'PDF');hold all
-end
-
-if i==3
-[D PD] = allfitdist(data,'PDF');hold all 
-end
-
-if i==4
-[D PD] = allfitdist(data,'PDF');hold all
-end
-
-if i==5
-[D PD] = allfitdist(data,'PDF');hold all
-end
- end
-
-%%
-
-%%%%%caculate MSD using MSD function
+%%%%%%%caculate MSD using MSD function
 % trks_part = trks;
 % trks_part(:,3:8) = [];
 % trks_theta = [trks(:,4) zeros(size(trks,1),1) trks(:,9:10)];

@@ -416,7 +416,8 @@ pd_v=fitdist(v_xy,'Exponential');
 x_MSD_v=min(v_xy):0.1:max(v_xy);
 y_MSD_v=pdf(pd_v,x_MSD_v);
 semilogy(x_MSD_v,y_MSD_v, 'color',bincolors(i,:),'LineWidth',2);hold all
-
+figure(2);
+hist(out_xy_1(:,4));hold all
 %pd=fitdist(out_xy(:,2)/(ppm.^2),'Normal');
 %x_MSD_T = min(out_xy(:,2)/(ppm.^2)):0.01:max(out_xy(:,2)/(ppm.^2));
 %y_MSD_T= pdf(pd,x_MSD_T);
